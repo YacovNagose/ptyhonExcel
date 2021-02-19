@@ -3,32 +3,53 @@ import json
 import csv
 import sys
 
-print("Starting")
-
-read_path = sys.argv[1]
-print(read_path)
-write_path = read_path + '.csv'
-print(write_path)
-
-
+# Variables
 my_dict = []
 csv_columns = []
+read_path = sys.argv[1]
+write_path = read_path + '.csv'
 
-with open(read_path, "r") as file:
-    i = 0;
-    for line in file:
-        my_dict.append(dict(json.loads(line)))
-        if my_dict[i].keys() not in csv_columns:
-            for key in my_dict[i].keys():
-                if key not in csv_columns:
-                    csv_columns.append(key)
-        i += 1;
 
-with open(write_path, "w+") as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-    writer.writeheader()
-    for data in my_dict:
-        writer.writerow(data)
+def open_file():
+    """
+    This Function read the given file and updates
+    the list my_dict and csv_columns with the needed values
+    :return: None
+    """
+    with open(read_path, "r") as file:
+        i = 0
+        for line in file:
+            my_dict.append(dict(json.loads(line)))
+            if my_dict[i].keys() not in csv_columns:
+                for key in my_dict[i].keys():
+                    if key not in csv_columns:
+                        csv_columns.append(key)
+            i += 1
+    print("Opening the file {}".format(read_path))
+
+
+def write_file():
+    """
+    This Function creates a new file with the wanted name.
+    Created CSV file and update the values in the CSV
+    :return: None
+    """
+    with open(write_path, "w+") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()
+        for data in my_dict:
+            writer.writerow(data)
     print("File successfully created under the name >> {}".format(write_path))
 
-#
+
+if __name__ == "__main__":
+    try:
+        open_file()
+    except FileNotFoundError:
+        print("File not found, Make sure the file name is correct")
+    try:
+        write_file()
+    except all():
+        pass
+    finally:
+        print("Thanks for using this tool")
