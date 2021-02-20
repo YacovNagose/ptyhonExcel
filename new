@@ -2,6 +2,7 @@
 import json
 import csv
 import sys
+import os
 
 # Variables
 my_dict = []
@@ -14,16 +15,33 @@ def open_file():
     the list my_dict and csv_columns with the needed values
     :return: read_path
     """
-    read_path = sys.argv[1]
-    with open(read_path, "r") as file:
-        i = 0
-        for line in file:
-            my_dict.append(dict(json.loads(line)))
-            if my_dict[i].keys() not in csv_columns:
-                for key in my_dict[i].keys():
-                    if key not in csv_columns:
-                        csv_columns.append(key)
-            i += 1
+    path = sys.argv[1]
+    if os.path.isfile(path):
+        read_path = sys.argv[1]
+        with open(read_path, "r") as file:
+            i = 0
+            for line in file:
+                my_dict.append(dict(json.loads(line)))
+                if my_dict[i].keys() not in csv_columns:
+                    for key in my_dict[i].keys():
+                        if key not in csv_columns:
+                            csv_columns.append(key)
+                i += 1
+    if os.path.isdir(path):
+        read_path = []
+        logs = [f for f in os.listdir(path) if not f.startswith('.')]  #Ignore hidden files
+        for i in range(len(logs)):
+            read_path.append(path + logs[i])
+            with open(read_path[0], "r") as file:
+                i = 0
+                for line in file:
+                    my_dict.append(dict(json.loads(line)))
+                    if my_dict[i].keys() not in csv_columns:
+                        for key in my_dict[i].keys():
+                            if key not in csv_columns:
+                                csv_columns.append(key)
+                    i += 1
+
     return read_path
 
 
@@ -33,27 +51,38 @@ def write_file():
     Created CSV file and update the values in the CSV
     :return: None
     """
-    write_path = open_file() + '.csv'
-    with open(write_path, "w+") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-        writer.writeheader()
-        print("Creating the file..")
-        for data in my_dict:
-            writer.writerow(data)
-    print("File successfully created under the name >> {}".format(write_path))
+    for file in open_file():
+        write_path = file + '.csv'
+        with open(write_path, "w+") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            print("Creating the file..")
+            for data in my_dict:
+                writer.writerow(data)
+        print("File successfully created under the name >> {}".format(write_path))
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Please enter file or folder name")
     else:
-        try:
-            open_file()
-            print("Opening the file {}".format(sys.argv[1]))
-            write_file()
-        except FileNotFoundError:
-            print("File not found, Make sure the file name is correct")
-            exit()
-        finally:
-            print("Thanks for using this tool")
+        path = sys.argv[1]
+        if os.path.isfile(path):
+            print("Path type is file")
+            try:
+                open_file()
+                print("Opening the file {}".format(path))
+                write_file()
+            except FileNotFoundError:
+                print("File not found, Make sure the file name is correct")
+                exit()
+        if os.path.isdir(path):
+            print("Path type is directory")
+            try:
+                open_file()
+                print("Opening the file {}".format(path))
+                write_file()
+            except FileNotFoundError:
+                print("File not found, Make sure the file name is correct")
+                exit()
 
