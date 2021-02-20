@@ -50,13 +50,10 @@ if __name__ == "__main__":
         try:
             open_file()
             print("Opening the file {}".format(sys.argv[1]))
+            write_file()
         except FileNotFoundError:
             print("File not found, Make sure the file name is correct")
             exit()
-        try:
-            write_file()
-        except all():
-            pass
         finally:
             print("Thanks for using this tool")
 
