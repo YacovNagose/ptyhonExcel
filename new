@@ -4,7 +4,6 @@ import csv
 import sys
 import os
 import multiprocessing
-import time
 
 
 
@@ -18,7 +17,7 @@ def open_file(file):
     """
     This Function read the given file and updates
     the list my_dict and csv_columns with the needed values
-    :return: None
+    :return: my_dict
     """
     my_dict = []
     with open(file, "r") as file:
@@ -31,16 +30,32 @@ def open_file(file):
                         csv_columns.append(key)
             i += 1
         return my_dict
-    print("Reading file >> {}".format(file))
 
 
-def write_file(location, file):
+def write_folder(location, file):
+    """
+    This Function creates a new file with the wanted name and folder.
+    Created CSV file and update the values in the CSV
+    :return: None
+    """
+    dic = open_file(file)
+    write_path = location.replace('.log', '') + '.csv'
+    with open(write_path, "w+") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()
+        for data in dic:
+            writer.writerow(data)
+    csv_columns.clear() #clear the list after done
+    print("File successfully created under the name >> {}".format(write_path))
+
+
+def write_file(location):
     """
     This Function creates a new file with the wanted name.
     Created CSV file and update the values in the CSV
     :return: None
     """
-    dic = open_file(file)
+    dic = open_file(location)
     write_path = location.replace('.log', '') + '.csv'
     with open(write_path, "w+") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
@@ -53,17 +68,13 @@ def write_file(location, file):
 def run_app():
     read_path = []  #List of all files
     w_path = []     #List of writh path
-    jobs = []       #List of read jobs
     w_jobs = []     #List of write jobs
     logs = [f for f in os.listdir(path) if f.endswith('.log')]  # Ignore hidden files
     for log in logs:
-        w_path.append(csv_file + log.replace('.log', ''))
+        w_path.append(csv_file + log)
         read_path.append(path + log)
     for i in range(len(logs)):
-        rp = multiprocessing.Process(target=open_file, args=(read_path[i],))
-        jobs.append(rp)
-        rp.start()
-        wp = multiprocessing.Process(target=write_file, args=(w_path[i],read_path[i]))
+        wp = multiprocessing.Process(target=write_folder, args=(w_path[i], read_path[i]))
         w_jobs.append(wp)
         wp.start()
 
@@ -73,13 +84,11 @@ if __name__ == "__main__":
         print("Please enter file or folder name")
     else:
         path = sys.argv[1]
-        print("************ {}".format(path))
         if os.path.isfile(path):
             print("Path type is file")
             try:
                 open_file(path)
-                print("Opening the file {}".format(path))
-                write_file(path, path)
+                write_file(path)
             except FileNotFoundError:
                 print("File not found, Make sure the file name is correct")
                 exit()
@@ -89,7 +98,7 @@ if __name__ == "__main__":
         if os.path.isdir(path):
             try:
                 csv_file = path + 'csv/'
-                if os.path.isfile(csv_file) is False: #Checks if file exists, if not create it.
+                if os.path.isdir(csv_file) is False: #Checks if file exists, if not create it.
                     os.mkdir(csv_file)
             except OSError:
                 print("Creation of the directory %s failed" % csv_file)
